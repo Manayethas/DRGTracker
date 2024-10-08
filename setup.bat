@@ -1,20 +1,49 @@
 @echo off
 
-:: Check if Python, pip, git, and SQLite are installed
-echo Checking if Python 3, pip, git, and SQLite are installed...
+:: Check if winget is available for installing Python
+echo Checking if winget (Windows Package Manager) is available...
 
+winget --version >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+    echo winget is not available. Please install winget or ensure Windows is up to date.
+    exit /b 1
+)
+
+:: Install Python using winget if not installed
+echo Checking if Python 3 is installed...
 python --version >nul 2>&1
 if %ERRORLEVEL% neq 0 (
-    echo Python is not installed. Please install Python 3 and try again.
+    echo Python is not installed. Installing Python 3...
+    winget install --id=Python.Python.3 --source winget --silent
+)
+
+:: Disable App Execution Aliases for python.exe and python3.exe
+echo Disabling App Execution Aliases for Python...
+powershell -Command "Get-AppxPackage *Python* | Remove-AppPackage"
+powershell -Command "Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\ApplicationExecutionAlias\AliasMapping\python.exe' -Name 'Target' -Value ''"
+powershell -Command "Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\ApplicationExecutionAlias\AliasMapping\python3.exe' -Name 'Target' -Value ''"
+
+:: Ensure Python is in the PATH
+echo Adding Python to PATH...
+setx PATH "%PATH%;C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python39\"
+
+:: Verify Python installation
+python --version
+if %ERRORLEVEL% neq 0 (
+    echo Python installation failed. Please check the installation manually.
     exit /b 1
 )
 
+:: Check if Git is installed
+echo Checking if Git is installed...
 git --version >nul 2>&1
 if %ERRORLEVEL% neq 0 (
-    echo Git is not installed. Please install Git and try again.
-    exit /b 1
+    echo Git is not installed. Installing Git...
+    winget install --id=Git.Git -e --source winget
 )
 
+:: Check if SQLite is installed
+echo Checking if SQLite is installed...
 sqlite3 --version >nul 2>&1
 if %ERRORLEVEL% neq 0 (
     echo SQLite is not installed. Installing SQLite...
