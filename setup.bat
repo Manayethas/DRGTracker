@@ -17,11 +17,10 @@ if %ERRORLEVEL% neq 0 (
     winget install --id=Python.Python.3 --source winget --silent
 )
 
-:: Disable App Execution Aliases for python.exe and python3.exe
+:: Disable App Execution Aliases only if the paths exist
 echo Disabling App Execution Aliases for Python...
-powershell -Command "Get-AppxPackage *Python* | Remove-AppPackage"
-powershell -Command "Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\ApplicationExecutionAlias\AliasMapping\python.exe' -Name 'Target' -Value ''"
-powershell -Command "Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\ApplicationExecutionAlias\AliasMapping\python3.exe' -Name 'Target' -Value ''"
+powershell -Command "if (Test-Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\ApplicationExecutionAlias\AliasMapping\python.exe') { Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\ApplicationExecutionAlias\AliasMapping\python.exe' -Name 'Target' -Value '' }"
+powershell -Command "if (Test-Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\ApplicationExecutionAlias\AliasMapping\python3.exe') { Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\ApplicationExecutionAlias\AliasMapping\python3.exe' -Name 'Target' -Value '' }"
 
 :: Ensure Python is in the PATH
 echo Adding Python to PATH...
@@ -49,7 +48,9 @@ if %ERRORLEVEL% neq 0 (
     echo SQLite is not installed. Installing SQLite...
     powershell -Command "Invoke-WebRequest https://sqlite.org/2024/sqlite-tools-win32-x86-3410000.zip -OutFile sqlite.zip"
     powershell -Command "Expand-Archive sqlite.zip -DestinationPath ."
-    set PATH=%cd%\sqlite-tools-win32-x86-3410000;%PATH%
+    set "sqlite_path=%cd%\sqlite-tools-win32-x86-3410000"
+    setx PATH "%PATH%;%sqlite_path%"
+    set PATH=%PATH%;%sqlite_path%
 ) else (
     echo SQLite is already installed.
 )
