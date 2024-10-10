@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Tracker</title>
+</head>
+<body>
+    <h1>Members</h1>
+    <table border="1">
+        <tr>
+            <th>Member ID</th>
+            <th>Username</th>
+            <th>Rank</th>
+            <th>Furnace Level</th>
+            <th>Power Level</th>
+            <th>Actions</th>
+        </tr>
+        {% for member in members %}
+        <tr>
+            <td>{{ member[0] }}</td>
+            <td>{{ member[1] }}</td>
+            <td>{{ member[2] }}</td>
+            <td>{{ member[3] }}</td>
+            <td>{{ member[4] }}</td>
+            <td>
+                <form action="/delete/{{ member[0] }}" method="POST">
+                    <button type="submit">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Add Member</h2>
+    <form action="/add" method="POST">
+        <label for="member_id">Member ID:</label>
+        <input type="text" name="member_id" required><br>
+        <label for="username">Username:</label>
+        <input type="text" name="username" required><br>
+        <label for="rank">Rank:</label>
+        <input type="text" name="rank" required><br>
+        <label for="furnace_level">Furnace Level:</label>
+        <input type="text" name="furnace_level" required><br>
+        <label for="power_level">Power Level:</label>
+        <input type="text" name="power_level" required><br>
+        <button type="submit">Add Member</button>
+    </form>
+</body>
+</html>
