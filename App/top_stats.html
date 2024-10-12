@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Stats</title>
+</head>
+<body>
+    <h1>Top 5 Powers and Biggest Changes</h1>
+
+    <h2>Top 5 Powers</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Power Level</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for member in top_powers %}
+            <tr>
+                <td>{{ member[0] }}</td>
+                <td>{{ member[1] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Top 5 Biggest Changes</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Power Change</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for member in biggest_changes %}
+            <tr>
+                <td>{{ member[0] }}</td>
+                <td>{{ member[1] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="/">Back to Home</a>
+</body>
+</html>
