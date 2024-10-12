@@ -1,0 +1,114 @@
+/* Set the overall background color and text style */
+body {
+    background-color: #2F4F4F; /* Slate grey */
+    color: white;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* Header styling */
+header {
+    background-color: #2C3E50; /* Darker slate grey */
+    padding: 20px;
+    text-align: center;
+}
+
+header h1 {
+    color: white;
+    font-size: 2.5em;
+    text-shadow: 1px 1px 2px black;
+}
+
+header nav a {
+    color: white;
+    font-size: 1.2em;
+    text-decoration: none;
+    margin: 0 15px;
+    border-bottom: 2px solid transparent;
+}
+
+header nav a:hover {
+    border-bottom: 2px solid white;
+}
+
+/* Main content styling */
+main {
+    padding: 20px;
+    text-align: center;
+}
+
+/* Table styling for member list */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+table th, table td {
+    border: 1px solid white;
+    padding: 12px;
+    text-align: center;
+}
+
+table th {
+    background-color: #2C3E50;
+    color: white;
+    text-shadow: 1px 1px 2px black;
+}
+
+table td {
+    color: white;
+    text-shadow: 1px 1px 2px black;
+}
+
+/* Button styling */
+button {
+    background-color: white;
+    color: black;
+    border: 2px solid black;
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    margin: 10px;
+}
+
+button:hover {
+    background-color: #E0E0E0; /* Lighter grey on hover */
+}
+
+/* Input fields */
+input[type="text"], input[type="number"], input[type="file"] {
+    padding: 10px;
+    border: 1px solid black;
+    margin: 10px 0;
+    width: 50%;
+}
+
+input[type="submit"], input[type="button"] {
+    background-color: white;
+    color: black;
+    border: 2px solid black;
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+}
+
+input[type="submit"]:hover, input[type="button"]:hover {
+    background-color: #E0E0E0; /* Lighter grey on hover */
+}
+
+/* Footer styling */
+footer {
+    background-color: #2C3E50;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+}
+
+footer p {
+    margin: 0;
+}
