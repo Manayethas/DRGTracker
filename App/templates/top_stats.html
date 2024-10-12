@@ -8,10 +8,9 @@
 </head>
 <body>
     <header>
-        <h1>Top Stats</h1>
+        <h1>Alliance Tracker - Top Stats</h1>
         <nav>
-            <a href="{{ url_for('index') }}">Home</a> |
-            <a href="{{ url_for('add_member_form') }}">Add Member</a> |
+            <a href="{{ url_for('index') }}">Home</a>
             <a href="{{ url_for('upload_file') }}">Upload CSV</a>
         </nav>
     </header>
@@ -20,14 +19,35 @@
         <h2>Top 5 Members by Power</h2>
         <ul>
             {% for member in top_powers %}
-            <li>{{ member[0] }} - {{ member[1] }}M</li>
+            <li>{{ member[0] }} - Power: {{ member[1] }}</li>
             {% endfor %}
         </ul>
 
-        <h2>Top 5 Members with Biggest Changes</h2>
+        <h2>Biggest Power Changes</h2>
         <ul>
-            {% for member in biggest_changes %}
-            <li>{{ member[0] }} - {{ member[1] }}M Power Change</li>
+            {% for member in biggest_power_changes %}
+            <li>{{ member[0] }} - Power Change: {{ member[1] }}</li>
+            {% endfor %}
+        </ul>
+
+        <h2>Least Power Changes</h2>
+        <ul>
+            {% for member in least_power_changes %}
+            <li>{{ member[0] }} - Power Change: {{ member[1] }}</li>
+            {% endfor %}
+        </ul>
+
+        <h2>Lowest 5 Members by Power</h2>
+        <ul>
+            {% for member in lowest_powers %}
+            <li>{{ member[0] }} - Power: {{ member[1] }}</li>
+            {% endfor %}
+        </ul>
+
+        <h2>Least Furnace Level Changes</h2>
+        <ul>
+            {% for member in least_furnace_changes %}
+            <li>{{ member[0] }} - Furnace Level Change: {{ member[1] }}</li>
             {% endfor %}
         </ul>
     </main>
