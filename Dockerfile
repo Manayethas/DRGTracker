@@ -1,25 +1,22 @@
-# Use the official Python image as a base
+# Step 1: Use the official Python 3.13 image as a base image
 FROM python:3.13-slim
 
-# Set the working directory in the container
+# Step 2: Set the working directory inside the container
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
+# Step 3: Copy the current directory contents into the container
 COPY . /app
 
-# Install system dependencies
+# Step 4: Install system dependencies including sqlite3, gcc, and build-essential
 RUN apt-get update && \
-    apt-get install -y sqlite3 libsqlite3-dev && \
+    apt-get install -y sqlite3 libsqlite3-dev build-essential gcc && \
     apt-get clean
 
-# Install Python dependencies from requirements.txt
+# Step 5: Install Python dependencies from requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose the port Flask runs on
+# Step 6: Expose the port that Flask will run on
 EXPOSE 5000
 
-# Initialize the database (this step will ensure the database exists)
-RUN sqlite3 /app/db/members_data.db "CREATE TABLE IF NOT EXISTS Members (id INTEGER PRIMARY KEY AUTOINCREMENT, member_id TEXT NOT NULL, username TEXT NOT NULL, rank TEXT NOT NULL, furnace_level_start TEXT NOT NULL, power_start TEXT NOT NULL);"
-
-# Command to run the Flask app with Gunicorn
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "tracker:app"]
+# Step 7: Run the application using Gunicorn
+CMD ["gunicorn", "-w", "4", "tracker:app", "-b", "0.0.0.0:5000"]
