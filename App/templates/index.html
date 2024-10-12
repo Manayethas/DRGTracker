@@ -12,7 +12,7 @@
         <nav>
             <a href="{{ url_for('index') }}">Home</a> |
             <a href="{{ url_for('top_stats') }}">Top Stats</a> |
-            <a href="{{ url_for('add_member_form') }}">Add Member</a> |
+            <a href="{{ url_for('add_member') }}">Add Member</a> |
             <a href="{{ url_for('upload_file') }}">Upload CSV</a>
         </nav>
     </header>
@@ -27,7 +27,9 @@
                     <th>Username</th>
                     <th>Rank</th>
                     <th>Furnace Level Start</th>
+                    <th>Furnace Level Current</th>
                     <th>Power Start</th>
+                    <th>Power Current</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -39,10 +41,13 @@
                     <td>{{ member[3] }}</td>
                     <td>{{ member[4] }}</td>
                     <td>{{ member[5] }}</td>
+                    <td>{{ member[6] }}</td>
+                    <td>{{ member[7] }}</td>
                     <td>
                         <form action="{{ url_for('update_member', member_id=member[0]) }}" method="POST">
                             <input type="number" name="furnace_level" placeholder="Furnace Level">
                             <input type="number" name="power_level" placeholder="Power">
+                            <input type="text" name="rank" placeholder="Rank">
                             <button type="submit">Update</button>
                         </form>
                         <form action="{{ url_for('delete_member', member_id=member[0]) }}" method="POST">
