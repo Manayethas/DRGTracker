@@ -7,9 +7,9 @@ WORKDIR /app
 # Step 3: Copy the current directory contents into the container
 COPY . /app
 
-# Step 4: Install system dependencies including sqlite3, gcc, and build-essential
+# Step 4: Install apt-utils to avoid the configuration warning and system dependencies
 RUN apt-get update && \
-    apt-get install -y sqlite3 libsqlite3-dev build-essential gcc && \
+    apt-get install -y apt-utils sqlite3 libsqlite3-dev build-essential gcc && \
     apt-get clean
 
 # Step 5: Install Python dependencies from requirements.txt
