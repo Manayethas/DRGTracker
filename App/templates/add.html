@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Member</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Add New Member</h1>
+        <nav>
+            <a href="{{ url_for('index') }}">Home</a> |
+            <a href="{{ url_for('top_stats') }}">Top Stats</a> |
+            <a href="{{ url_for('upload_file') }}">Upload CSV</a>
+        </nav>
+    </header>
+
+    <main>
+        <form action="{{ url_for('add_member') }}" method="POST">
+            <label for="member_id">Member ID:</label>
+            <input type="text" id="member_id" name="member_id" required><br><br>
+
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required><br><br>
+
+            <label for="rank">Rank:</label>
+            <select id="rank" name="rank" required>
+                <option value="R1">R1</option>
+                <option value="R2">R2</option>
+                <option value="R3">R3</option>
+                <option value="R4">R4</option>
+                <option value="R5">R5</option>
+            </select><br><br>
+
+            <label for="furnace_level">Furnace Level Start:</label>
+            <input type="number" id="furnace_level" name="furnace_level" required><br><br>
+
+            <label for="power_level">Power Start:</label>
+            <input type="number" id="power_level" name="power_level" required><br><br>
+
+            <button type="submit">Add Member</button>
+        </form>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Your Tracker App</p>
+    </footer>
+</body>
+</html>
