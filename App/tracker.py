@@ -38,7 +38,7 @@ def init_db():
     conn.commit()
     conn.close()
 
-@app.before_first_request
+@app.got_first_request
 def setup_db():
     init_db()
 
