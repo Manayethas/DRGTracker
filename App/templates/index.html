@@ -3,66 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alliance Power Tracker</title>
+    <title>Alliance Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Alliance Power Tracker</h1>
-    <div>Total Alliance Power: {{ total_power }}</div>
+    <header>
+        <h1>Alliance Tracker</h1>
+        <nav>
+            <a href="{{ url_for('index') }}">Home</a> |
+            <a href="{{ url_for('top_stats') }}">Top Stats</a> |
+            <a href="{{ url_for('add_member_form') }}">Add Member</a> |
+            <a href="{{ url_for('upload_file') }}">Upload CSV</a>
+        </nav>
+    </header>
 
-    <h2>Members</h2>
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Member ID</th>
-                <th>Username</th>
-                <th>Rank</th>
-                <th>Furnace Level</th>
-                <th>Power Level</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for member in members %}
-            <tr>
-                <td>{{ member[1] }}</td>
-                <td>{{ member[2] }}</td>
-                <td>{{ member[3] }}</td>
-                <td>{{ member[4] }}</td>
-                <td>{{ member[5] }}</td>
-                <td>
-                    <form action="/update/{{ member[0] }}" method="post" style="display: inline;">
-                        <input type="number" name="furnace_level" placeholder="Furnace Level" required>
-                        <input type="number" name="power_level" placeholder="Power Level" required>
-                        <button type="submit">Update</button>
-                    </form>
-                    <form action="/delete/{{ member[0] }}" method="post" style="display: inline;">
-                        <button type="submit">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <main>
+        <h2>Total Power: {{ total_power }}</h2>
 
-    <h2>Add New Member</h2>
-    <form action="/add" method="post">
-        <input type="text" name="member_id" placeholder="Member ID" required>
-        <input type="text" name="username" placeholder="Username" required>
-        <select name="rank" required>
-            <option value="R1">R1</option>
-            <option value="R2">R2</option>
-            <option value="R3">R3</option>
-            <option value="R4">R4</option>
-            <option value="R5">R5</option>
-        </select>
-        <input type="number" name="furnace_level" placeholder="Furnace Level" required>
-        <input type="number" name="power_level" placeholder="Power Level" required>
-        <button type="submit">Add Member</button>
-    </form>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Rank</th>
+                    <th>Furnace Level Start</th>
+                    <th>Power Start</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in members %}
+                <tr>
+                    <td>{{ member[1] }}</td>
+                    <td>{{ member[2] }}</td>
+                    <td>{{ member[3] }}</td>
+                    <td>{{ member[4] }}</td>
+                    <td>{{ member[5] }}</td>
+                    <td>
+                        <form action="{{ url_for('update_member', member_id=member[0]) }}" method="POST">
+                            <input type="number" name="furnace_level" placeholder="Furnace Level">
+                            <input type="number" name="power_level" placeholder="Power">
+                            <button type="submit">Update</button>
+                        </form>
+                        <form action="{{ url_for('delete_member', member_id=member[0]) }}" method="POST">
+                            <button type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </main>
 
-    <br>
-    <a href="/export_graph">Export Graph</a>
-    <br>
-    <a href="/top_stats">View Top 5 Stats</a>
+    <footer>
+        <p>&copy; 2024 Your Tracker App</p>
+    </footer>
 </body>
 </html>
