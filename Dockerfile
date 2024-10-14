@@ -1,17 +1,17 @@
-# Use Python 3.9 or newer
+# Use a base Python image
 FROM python:3.9-slim
 
-# Set the working directory in the container
+# Set the working directory
 WORKDIR /app
 
-# Copy the current directory contents into the container
+# Copy all project files (including the app directory) into the container
 COPY . /app
 
-# Install any necessary dependencies
-RUN pip install -r requirements.txt
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose the port the app runs on
+# Expose port 5000 for Flask
 EXPOSE 5000
 
-# Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app.tracker:app"]
+# Use Gunicorn to serve the Flask app
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app.tracker:app"]
