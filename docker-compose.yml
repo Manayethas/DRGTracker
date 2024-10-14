@@ -1,20 +1,21 @@
-version: '3.8'
-
+version: '3'
 services:
-  web:
-    build: .
+  drgtracker:
+    image: manayethas/drgtracker:dev  # You can replace with your local image if needed
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "5000:5000"
     volumes:
-      - ./app:/app
-      - ./db:/app/db
+      - ./db:/app/db  # This maps the ./db folder on your local machine to /app/db inside the container
     environment:
-      - FLASK_ENV=development
+      - FLASK_ENV=development  # Optional for dev purposes
     depends_on:
-      - db
+      - watchtower
 
-  db:
-    image: sqlite
+  watchtower:
+    image: containrrr/watchtower
     volumes:
-      - ./db:/app/db
-    command: sqlite3 /app/db/members_data.db
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --schedule "0 0 0 * * *"  # Optional: Runs watchtower daily at midnight
