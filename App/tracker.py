@@ -51,7 +51,7 @@ def index():
     members = cur.fetchall()
 
     # Sum the power values from the 'power_current' column
-    total_power = sum([int(member[3]) for member in members])
+    total_power = sum([int(member[4]) for member in members])
 
     # Pass the correct information to the template
     return render_template("index.html", members=members, total_power=total_power)
