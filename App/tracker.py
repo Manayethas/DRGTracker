@@ -164,18 +164,45 @@ def upload_file():
             conn = connect_db()
             cur = conn.cursor()
 
+            # Get the member_ids in the current database
+            cur.execute("SELECT member_id FROM Members")
+            existing_members = cur.fetchall()
+            existing_member_ids = {member[0] for member in existing_members}
+
+            # Store the member_ids in the CSV
+            csv_member_ids = set()
+
             for line in data:
                 # Strip the BOM or any hidden characters from member_id
                 member_id, username, rank, furnace_level, power_level = [x.strip() for x in line.split(',')]
+                csv_member_ids.add(member_id)
 
-                cur.execute("""
-                    INSERT INTO Members (member_id, username, rank, furnace_level_start, furnace_level_current, power_start, power_current)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (member_id, username, rank, furnace_level, furnace_level, power_level, power_level))
+                if member_id in existing_member_ids:
+                    # Update member
+                    cur.execute("""
+                        UPDATE Members
+                        SET username = ?, rank = ?, furnace_level_current = ?, power_current = ?
+                        WHERE member_id = ?
+                    """, (username, rank, furnace_level, power_level, member_id))
+                else:
+                    # Insert new member
+                    cur.execute("""
+                        INSERT INTO Members (member_id, username, rank, furnace_level_start, furnace_level_current, power_start, power_current)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """, (member_id, username, rank, furnace_level, furnace_level, power_level, power_level))
+
+            # Delete members not in the CSV
+            members_to_delete = existing_member_ids - csv_member_ids
+            if members_to_delete:
+                cur.execute("DELETE FROM Members WHERE member_id IN ({})".format(','.join('?' for _ in members_to_delete)), 
+                            tuple(members_to_delete))
 
             conn.commit()
             conn.close()
             return redirect(url_for('index'))
+
+    return render_template('upload.html')
+
 
     return render_template('upload.html')
 
