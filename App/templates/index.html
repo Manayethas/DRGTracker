@@ -26,31 +26,31 @@
                     <th>ID</th>
                     <th>Username</th>
                     <th>Rank</th>
-                    <th>Furnace Level Start</th>
-                    <th>Furnace Level Current</th>
-                    <th>Power Start</th>
-                    <th>Power Current</th>
+                    <th>Furnace Level</th>
+                    <th>Power</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for member in members %}
                 <tr>
-                    <td>{{ member[1] }}</td>
-                    <td>{{ member[2] }}</td>
-                    <td>{{ member[3] }}</td>
-                    <td>{{ member[4] }}</td>
-                    <td>{{ member[5] }}</td>
-                    <td>{{ member[6] }}</td>
-                    <td>{{ member[7] }}</td>
+                    <td>{{ member[0] }}</td> <!-- ID -->
+                    <td>{{ member[1] }}</td> <!-- Username -->
+                    <td>{{ member[2] }}</td> <!-- Rank -->
+                    <td>{{ member[3] }}</td> <!-- Furnace Level Current -->
+                    <td>{{ member[4] }}</td> <!-- Power Current -->
                     <td>
+                        <!-- Update form -->
                         <form action="{{ url_for('update_member', member_id=member[0]) }}" method="POST">
-                            <input type="number" name="furnace_level" placeholder="Furnace Level">
-                            <input type="number" name="power_level" placeholder="Power">
-                            <input type="text" name="rank" placeholder="Rank">
+                            <input type="number" name="furnace_level" value="{{ member[5] }}" placeholder="Furnace Level">
+                            <input type="number" name="power_level" value="{{ member[7] }}" placeholder="Power">
+                            <input type="text" name="rank" value="{{ member[3] }}" placeholder="Rank">
                             <button type="submit">Update</button>
                         </form>
-                        <form action="{{ url_for('delete_member', member_id=member[0]) }}" method="POST">
+
+                        <!-- Delete form -->
+                        <form action="{{ url_for('delete_member', member_id=member[0]) }}" method="POST" style="margin-top: 5px;">
+                            <input type="hidden" name="_method" value="DELETE">
                             <button type="submit">Delete</button>
                         </form>
                     </td>

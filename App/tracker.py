@@ -10,7 +10,7 @@ DB_PATH = '/app/db/members_data.db'
 
 def connect_db():
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect(DB_PATH, timeout=10)
         return conn
     except sqlite3.Error as e:
         print(f"Error connecting to database: {e}")
@@ -34,7 +34,7 @@ def init_db():
     conn.commit()
     conn.close()
 
-@app.before_first_request
+@app.before_request
 def setup_db():
     init_db()
 
@@ -45,13 +45,15 @@ def index():
     if conn is None:
         return "Failed to connect to the database", 500
     cur = conn.cursor()
-    
+
     # Fetch members sorted by rank and then by power
-    cur.execute("SELECT * FROM Members ORDER BY rank DESC, power_current DESC")
+    cur.execute("SELECT member_id, username, rank, furnace_level_current, power_current FROM Members ORDER BY rank DESC, power_current DESC")
     members = cur.fetchall()
 
-    total_power = sum([member[7] for member in members])
+    # Sum the power values from the 'power_current' column
+    total_power = sum([int(member[4]) for member in members])
 
+    # Pass the correct information to the template
     return render_template("index.html", members=members, total_power=total_power)
 
 # Add new member form
@@ -60,54 +62,43 @@ def add_member_form():
     return render_template('add.html')
 
 # Add new member
-@app.route('/add', methods=['POST'])
+@app.route('/add', methods=['GET', 'POST'])
 def add_member():
-    member_id = request.form['member_id']
-    username = request.form['username']
-    rank = request.form['rank']
-    furnace_level = int(request.form['furnace_level'])
-    power_level = int(request.form['power_level'])
+    if request.method == 'POST':
+        member_id = request.form['member_id']
+        username = request.form['username']
+        rank = request.form['rank']
+        furnace_level = int(request.form['furnace_level'])
+        power_level = int(request.form['power_level'])
 
-    conn = connect_db()
-    cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO Members (member_id, username, rank, furnace_level_start, furnace_level_current, power_start, power_current) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (member_id, username, rank, furnace_level, furnace_level, power_level, power_level))
-    conn.commit()
-    conn.close()
+        conn = connect_db()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO Members (member_id, username, rank, furnace_level_start, furnace_level_current, power_start, power_current)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (member_id, username, rank, furnace_level, furnace_level, power_level, power_level))
+        conn.commit()
+        conn.close()
 
-    return redirect(url_for('index'))
+        return redirect(url_for('index'))
+    else:
+        # Handle the GET request, show the form
+        return render_template('add.html')
 
 # Update member power and furnace level
 @app.route('/update/<int:member_id>', methods=['POST'])
 def update_member(member_id):
-    new_furnace_level = int(request.form['furnace_level'])
-    new_power_level = int(request.form['power_level'])
-    new_rank = request.form['rank']
+    furnace_level = request.form['furnace_level']
+    power_level = request.form['power_level']
+    rank = request.form['rank']
 
     conn = connect_db()
     cur = conn.cursor()
-
-    cur.execute("""
-        SELECT furnace_level_start, power_start, furnace_level_current, power_current 
-        FROM Members WHERE id = ?
-    """, (member_id,))
-    member = cur.fetchone()
-
-    if member:
-        furnace_change = new_furnace_level - member[1]
-        power_change = new_power_level - member[3]
-
-        cur.execute("""
-            UPDATE Members 
-            SET furnace_level_current = ?, power_current = ?, rank = ?
-            WHERE id = ?
-        """, (new_furnace_level, new_power_level, new_rank, member_id))
-
-        conn.commit()
-
+    cur.execute('UPDATE Members SET furnace_level_current = ?, power_current = ?, rank = ? WHERE member_id = ?',
+                (furnace_level, power_level, rank, member_id))
+    conn.commit()
     conn.close()
+
     return redirect(url_for('index'))
 
 # Delete member
@@ -115,7 +106,7 @@ def update_member(member_id):
 def delete_member(member_id):
     conn = connect_db()
     cur = conn.cursor()
-    cur.execute("DELETE FROM Members WHERE id = ?", (member_id,))
+    cur.execute('DELETE FROM Members WHERE member_id = ?', (str(member_id),))
     conn.commit()
     conn.close()
     return redirect(url_for('index'))
@@ -132,7 +123,7 @@ def top_stats():
 
     # Top 5 biggest power changes
     cur.execute("""
-        SELECT username, (power_current - power_start) AS power_change 
+        SELECT username, (power_current - power_start) AS power_change
         FROM Members ORDER BY power_change DESC LIMIT 5
     """)
     biggest_power_changes = cur.fetchall()
@@ -143,44 +134,55 @@ def top_stats():
 
     # Top 5 smallest changes in power
     cur.execute("""
-        SELECT username, (power_current - power_start) AS power_change 
+        SELECT username, (power_current - power_start) AS power_change
         FROM Members ORDER BY power_change ASC LIMIT 5
     """)
     smallest_power_changes = cur.fetchall()
 
-    return render_template("top_stats.html", 
-                           top_powers=top_powers, 
-                           biggest_power_changes=biggest_power_changes, 
-                           lowest_powers=lowest_powers, 
+    return render_template("top_stats.html",
+                           top_powers=top_powers,
+                           biggest_power_changes=biggest_power_changes,
+                           lowest_powers=lowest_powers,
                            smallest_power_changes=smallest_power_changes)
 
 # Upload CSV for bulk addition of members
-@app.route('/upload', methods=['POST'])
+@app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
-    if 'file' not in request.files:
-        flash('No file part')
-        return redirect(request.url)
-    
-    file = request.files['file']
-    if file.filename == '':
-        flash('No selected file')
-        return redirect(request.url)
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
 
-    if file:
-        data = file.read().decode("utf-8").splitlines()
-        conn = connect_db()
-        cur = conn.cursor()
+        file = request.files['file']
 
-        for line in data:
-            member_id, username, rank, furnace_level, power_level = line.split(',')
-            cur.execute("""
-                INSERT INTO Members (member_id, username, rank, furnace_level_start, furnace_level_current, power_start, power_current) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (member_id, username, rank, furnace_level, furnace_level, power_level, power_level))
-        
-        conn.commit()
-        conn.close()
-        return redirect(url_for('index'))
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+
+        if file:
+            data = file.read().decode("utf-8-sig").splitlines()  # Remove BOM here with utf-8-sig
+            conn = connect_db()
+            cur = conn.cursor()
+
+            for line in data:
+                # Strip the BOM or any hidden characters from member_id
+                member_id, username, rank, furnace_level, power_level = [x.strip() for x in line.split(',')]
+
+                cur.execute("""
+                    INSERT INTO Members (member_id, username, rank, furnace_level_start, furnace_level_current, power_start, power_current)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, (member_id, username, rank, furnace_level, furnace_level, power_level, power_level))
+
+            conn.commit()
+            conn.close()
+            return redirect(url_for('index'))
+
+    return render_template('upload.html')
+
+# Handle method not allowed errors
+@app.errorhandler(405)
+def method_not_allowed(e):
+    return "Method Not Allowed: {}".format(request.url), 405
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)
