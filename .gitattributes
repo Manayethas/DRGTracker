@@ -1,0 +1,4 @@
+echo '.github/workflows/docker-build.yml merge=ours' >> .gitattributes
+git add .gitattributes
+git commit -m "Ensure workflow file isn't overwritten during merges"
+git push origin stable
