@@ -3,7 +3,7 @@ haname: Docker Image CI
 on:
   push:
     branches:
-      - main  # This means the workflow will run on push to the main branch.
+      - stable  # This means the workflow will run on push to the main branch.
   pull_request:
     branches:
       - main
