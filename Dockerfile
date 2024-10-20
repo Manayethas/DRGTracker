@@ -9,6 +9,7 @@ COPY . /app
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install flask flask-login
 
 # Expose port 5000 for Flask
 EXPOSE 5000
