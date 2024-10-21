@@ -3,6 +3,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 import sqlite3
 import os
 import bcrypt
+from datetime import timedelta
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
