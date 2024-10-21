@@ -143,7 +143,7 @@ def add_member_form():
     return render_template('add.html')
 
 # Add new member (only accessible to logged-in users)
-@app.route('/add', methods=['POST'])
+@app.route('/add', methods=['GET', 'POST'])
 @login_required
 def add_member():
     if not current_user.is_admin:
