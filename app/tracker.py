@@ -194,48 +194,54 @@ def delete_member(member_id):
     return redirect(url_for('admin_panel'))
 
 # Upload CSV for bulk addition or update of members
-@app.route('/upload', methods=['GET', 'POST'])
+@app.route('/upload', methods=['POST'])
 @login_required
 def upload_file():
-    if not current_user.is_admin:
-        flash("You do not have access to this page.", "error")
-        return redirect(url_for('index'))
+    if 'file' not in request.files:
+        flash('No file part')
+        return redirect(url_for('admin_panel'))
 
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            flash('No file part', 'error')
-            return redirect(request.url)
-        
-        file = request.files['file']
-        
-        if file.filename == '':
-            flash('No selected file', 'error')
-            return redirect(request.url)
-        
-        if file:
-            data = file.read().decode("utf-8-sig").splitlines()  # Removes any hidden BOM
+    file = request.files['file']
+
+    if file.filename == '':
+        flash('No selected file')
+        return redirect(url_for('admin_panel'))
+
+    if file and file.filename.endswith('.csv'):
+        try:
+            # Read CSV file content and process it
+            data = file.read().decode("utf-8-sig").splitlines()  # Handle BOM if present
             conn = connect_db()
             cur = conn.cursor()
-            
+
+            # Loop through each line in the CSV and insert or update records
             for line in data:
-                member_id, username, rank, furnace_level, power_level = [x.strip() for x in line.split(',')]
-                
-                cur.execute("""
-                    INSERT INTO Members (member_id, username, rank, furnace_level_start, furnace_level_current, power_start, power_current)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                    ON CONFLICT(member_id) DO UPDATE SET
-                        username=excluded.username, 
-                        rank=excluded.rank, 
-                        furnace_level_current=excluded.furnace_level_current, 
-                        power_current=excluded.power_current
-                """, (member_id, username, rank, furnace_level, furnace_level, power_level, power_level))
-            
+                try:
+                    member_id, username, rank, furnace_level, power_level = [x.strip() for x in line.split(',')]
+                    # Example of an upsert query to update existing or add new entries
+                    cur.execute("""
+                        INSERT INTO Members (member_id, username, rank, furnace_level_start, furnace_level_current, power_start, power_current)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        ON CONFLICT(member_id) DO UPDATE SET
+                        username=excluded.username, rank=excluded.rank, furnace_level_current=excluded.furnace_level_current, power_current=excluded.power_current
+                    """, (member_id, username, rank, furnace_level, furnace_level, power_level, power_level))
+                except Exception as e:
+                    print(f"Error processing line {line}: {e}")
+                    continue
+
             conn.commit()
             conn.close()
-            flash('File uploaded and processed successfully!', 'success')
+            flash("CSV file processed successfully.")
+        except Exception as e:
+            flash(f"An error occurred while processing the CSV: {e}")
             return redirect(url_for('admin_panel'))
 
-    return render_template('upload.html')
+    else:
+        flash('File type not allowed, only CSV is accepted.')
+        return redirect(url_for('admin_panel'))
+
+    return redirect(url_for('admin_panel'))
+
 
 # Top Stats page
 @app.route("/top_stats")
