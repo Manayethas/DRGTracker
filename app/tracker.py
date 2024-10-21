@@ -194,7 +194,7 @@ def delete_member(member_id):
     return redirect(url_for('admin_panel'))
 
 # Upload CSV for bulk addition or update of members
-@app.route('/upload', methods=['POST'])
+@app.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload_file():
     if 'file' not in request.files:
