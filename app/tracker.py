@@ -18,6 +18,13 @@ class User(UserMixin):
         self.id = id
         self.username = username
         self.is_admin = is_admin
+# Add session lifetime configuration
+app.config['SESSION_PERMANENT'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)  # Set session timeout
+
+# Additionally, ensure that login_manager remembers the user
+login_manager = LoginManager()
+login_manager.init_app(app)
 
 # Database connection function
 def connect_db():
