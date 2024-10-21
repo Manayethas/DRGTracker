@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import sqlite3
 import os
@@ -7,41 +7,35 @@ from datetime import timedelta
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
-
-# Add session lifetime configuration
-app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)  # Set session timeout
 
-# Additionally, ensure that login_manager remembers the user
+# Flask-Login setup
 login_manager = LoginManager()
 login_manager.init_app(app)
+login_manager.login_view = 'login'  # Redirect to login page if not logged in
 
-# Initialize the LoginManager for Flask-Login
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
+# Ensure that session is permanent for every request
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
 
-# User class for login management
+# Dummy user class for login
 class User(UserMixin):
-    def __init__(self, id, username, is_admin):
+    def __init__(self, id, username, is_admin=False):
         self.id = id
         self.username = username
         self.is_admin = is_admin
 
-# Database connection function
-def connect_db():
-    conn = sqlite3.connect('/app/db/members_data.db', timeout=10)
-    return conn
-
-# User loader function for Flask-Login
 @login_manager.user_loader
 def load_user(user_id):
     conn = connect_db()
     cur = conn.cursor()
     cur.execute("SELECT id, username, is_admin FROM Users WHERE id = ?", (user_id,))
     user_data = cur.fetchone()
+    conn.close()
+
     if user_data:
-        return User(user_data[0], user_data[1], bool(user_data[2]))
+        return User(user_data[0], user_data[1], user_data[2])
     return None
 
 # Home page - Display all members
@@ -81,12 +75,16 @@ def login():
         if user_data and bcrypt.checkpw(password.encode('utf-8'), user_data[2].encode('utf-8')):
             user = User(user_data[0], user_data[1], bool(user_data[3]))
             login_user(user)
-            flash('Logged in successfully!', 'success')
-            return redirect(url_for('admin_panel') if user.is_admin else url_for('index'))
+            return redirect(url_for('admin_panel'))
         else:
             flash("Invalid username or password", "error")
-    
     return render_template('login.html')
+
+# Ensure the route for admin panel is decorated with login_required
+@app.route('/admin')
+@login_required
+def admin_panel():
+    return render_template("admin_panel.html")
 
 # Logout route
 @app.route('/logout')
@@ -197,52 +195,51 @@ def delete_member(member_id):
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload_file():
-    if 'file' not in request.files:
-        flash('No file part')
-        return redirect(url_for('admin_panel'))
-
-    file = request.files['file']
-
-    if file.filename == '':
-        flash('No selected file')
-        return redirect(url_for('admin_panel'))
-
-    if file and file.filename.endswith('.csv'):
-        try:
-            # Read CSV file content and process it
-            data = file.read().decode("utf-8-sig").splitlines()  # Handle BOM if present
-            conn = connect_db()
-            cur = conn.cursor()
-
-            # Loop through each line in the CSV and insert or update records
-            for line in data:
-                try:
-                    member_id, username, rank, furnace_level, power_level = [x.strip() for x in line.split(',')]
-                    # Example of an upsert query to update existing or add new entries
-                    cur.execute("""
-                        INSERT INTO Members (member_id, username, rank, furnace_level_start, furnace_level_current, power_start, power_current)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                        ON CONFLICT(member_id) DO UPDATE SET
-                        username=excluded.username, rank=excluded.rank, furnace_level_current=excluded.furnace_level_current, power_current=excluded.power_current
-                    """, (member_id, username, rank, furnace_level, furnace_level, power_level, power_level))
-                except Exception as e:
-                    print(f"Error processing line {line}: {e}")
-                    continue
-
-            conn.commit()
-            conn.close()
-            flash("CSV file processed successfully.")
-        except Exception as e:
-            flash(f"An error occurred while processing the CSV: {e}")
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part')
             return redirect(url_for('admin_panel'))
 
-    else:
-        flash('File type not allowed, only CSV is accepted.')
-        return redirect(url_for('admin_panel'))
+        file = request.files['file']
 
-    return redirect(url_for('admin_panel'))
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(url_for('admin_panel'))
 
+        if file and file.filename.endswith('.csv'):
+            try:
+                # Read CSV file content and process it
+                data = file.read().decode("utf-8-sig").splitlines()  # Handle BOM if present
+                conn = connect_db()
+                cur = conn.cursor()
 
+                # Loop through each line in the CSV and insert or update records
+                for line in data:
+                    try:
+                        member_id, username, rank, furnace_level, power_level = [x.strip() for x in line.split(',')]
+                        cur.execute("""
+                            INSERT INTO Members (member_id, username, rank, furnace_level_start, furnace_level_current, power_start, power_current)
+                            VALUES (?, ?, ?, ?, ?, ?, ?)
+                            ON CONFLICT(member_id) DO UPDATE SET
+                            username=excluded.username, rank=excluded.rank, furnace_level_current=excluded.furnace_level_current, power_current=excluded.power_current
+                        """, (member_id, username, rank, furnace_level, furnace_level, power_level, power_level))
+                    except Exception as e:
+                        print(f"Error processing line {line}: {e}")
+                        continue
+
+                conn.commit()
+                conn.close()
+                flash("CSV file processed successfully.")
+            except Exception as e:
+                flash(f"An error occurred while processing the CSV: {e}")
+                return redirect(url_for('admin_panel'))
+
+        else:
+            flash('File type not allowed, only CSV is accepted.')
+            return redirect(url_for('admin_panel'))
+
+    return render_template('upload.html')
+    
 # Top Stats page
 @app.route("/top_stats")
 def top_stats():
