@@ -94,6 +94,33 @@ def add_member_form():
         return redirect(url_for('index'))
     return render_template('add.html')
 
+# Route to create a new user (Admin only)
+@app.route('/create_user', methods=['GET', 'POST'])
+@login_required
+def create_user():
+    if not current_user.is_admin:
+        flash('You do not have access to this page.', 'error')
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        is_admin = request.form.get('is_admin', False)
+
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+        conn = connect_db()
+        cur = conn.cursor()
+        cur.execute("INSERT INTO Users (username, password, is_admin) VALUES (?, ?, ?)",
+                    (username, hashed_password.decode('utf-8'), is_admin))
+        conn.commit()
+        conn.close()
+
+        flash('New user created successfully!', 'success')
+        return redirect(url_for('admin_panel'))
+
+    return render_template('create_user.html')
+    
 # Add new member
 @app.route('/add', methods=['GET', 'POST'])
 @login_required
