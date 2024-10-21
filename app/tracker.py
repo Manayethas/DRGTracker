@@ -161,6 +161,29 @@ def create_user():
         return redirect(url_for('admin_panel'))
     return render_template('create_user.html')
 
+# Add new member
+@app.route('/add_member', methods=['GET', 'POST'])
+def add_member():
+    if request.method == 'POST':
+        member_id = request.form['member_id']
+        username = request.form['username']
+        rank = request.form['rank']
+        furnace_level = int(request.form['furnace_level'])
+        power_level = int(request.form['power_level'])
+
+        conn = connect_db()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO Members (member_id, username, rank, furnace_level_start, furnace_level_current, power_start, power_current)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (member_id, username, rank, furnace_level, furnace_level, power_level, power_level))
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for('index'))
+    else:
+        return render_template('add_member.html')
+
 # Update member power and furnace level
 @app.route('/update/<int:member_id>', methods=['POST'])
 @login_required
