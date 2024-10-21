@@ -202,5 +202,82 @@ def delete_member(member_id):
 
     return redirect(url_for('index'))
 
+# Show top 5 members by power and top 5 members with the biggest changes
+@app.route('/top_stats')
+@login_required
+def top_stats():
+    conn = connect_db()
+    cur = conn.cursor()
+
+    # Top 5 highest power
+    cur.execute("SELECT username, power_current FROM Members ORDER BY power_current DESC LIMIT 5")
+    top_powers = cur.fetchall()
+
+    # Top 5 biggest power changes
+    cur.execute("""
+        SELECT username, (power_current - power_start) AS power_change
+        FROM Members ORDER BY power_change DESC LIMIT 5
+    """)
+    biggest_power_changes = cur.fetchall()
+
+    # Top 5 lowest power
+    cur.execute("SELECT username, power_current FROM Members ORDER BY power_current ASC LIMIT 5")
+    lowest_powers = cur.fetchall()
+
+    # Top 5 smallest changes in power
+    cur.execute("""
+        SELECT username, (power_current - power_start) AS power_change
+        FROM Members ORDER BY power_change ASC LIMIT 5
+    """)
+    smallest_power_changes = cur.fetchall()
+
+    return render_template("top_stats.html",
+                           top_powers=top_powers,
+                           biggest_power_changes=biggest_power_changes,
+                           lowest_powers=lowest_powers,
+                           smallest_power_changes=smallest_power_changes)
+@app.route('/upload', methods=['GET', 'POST'])
+@login_required
+def upload_file():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part', 'error')
+            return redirect(request.url)
+        
+        file = request.files['file']
+        
+        if file.filename == '':
+            flash('No selected file', 'error')
+            return redirect(request.url)
+        
+        if file:
+            # Read the CSV file and decode it
+            data = file.read().decode("utf-8-sig").splitlines()  # Removes any hidden BOM
+            
+            conn = connect_db()
+            cur = conn.cursor()
+            
+            for line in data:
+                # Assume CSV format: member_id, username, rank, furnace_level, power_level
+                member_id, username, rank, furnace_level, power_level = [x.strip() for x in line.split(',')]
+                
+                # Insert or update existing records using ON CONFLICT
+                cur.execute("""
+                    INSERT INTO Members (member_id, username, rank, furnace_level_start, furnace_level_current, power_start, power_current)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(member_id) DO UPDATE SET
+                        username=excluded.username, 
+                        rank=excluded.rank, 
+                        furnace_level_current=excluded.furnace_level_current, 
+                        power_current=excluded.power_current
+                """, (member_id, username, rank, furnace_level, furnace_level, power_level, power_level))
+            
+            conn.commit()
+            conn.close()
+            flash('File uploaded and processed successfully!', 'success')
+            return redirect(url_for('index'))
+
+    return render_template('upload.html')
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
