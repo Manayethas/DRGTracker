@@ -21,42 +21,42 @@
         <h2>Total Power: {{ total_power }}</h2>
 
         <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Rank</th>
-                    <th>Furnace Level</th>
-                    <th>Power</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for member in members %}
-                <tr>
-                    <td>{{ member[0] }}</td> <!-- ID -->
-                    <td>{{ member[1] }}</td> <!-- Username -->
-                    <td>{{ member[2] }}</td> <!-- Rank -->
-                    <td>{{ member[3] }}</td> <!-- Furnace Level Current -->
-                    <td>{{ member[4] }}</td> <!-- Power Current -->
-                    <td>
-                        <!-- Update form -->
-                        <form action="{{ url_for('update_member', member_id=member[0]) }}" method="POST">
-                            <input type="number" name="furnace_level" value="{{ member[5] }}" placeholder="Furnace Level">
-                            <input type="number" name="power_level" value="{{ member[7] }}" placeholder="Power">
-                            <input type="text" name="rank" value="{{ member[3] }}" placeholder="Rank">
-                            <button type="submit">Update</button>
-                        </form>
-
-                        <!-- Delete form -->
-                        <form action="{{ url_for('delete_member', member_id=member[0]) }}" method="POST" style="margin-top: 5px;">
-                            <input type="hidden" name="_method" value="DELETE">
-                            <button type="submit">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
+           <thead>
+    <tr>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Rank</th>
+        <th>Furnace Level</th>
+        <th>Power</th>
+        {% if current_user.is_authenticated and current_user.is_admin %}
+        <th>Actions</th>
+        {% endif %}
+    </tr>
+</thead>
+<tbody>
+    {% for member in members %}
+    <tr>
+        <td>{{ member[0] }}</td>
+        <td>{{ member[1] }}</td>
+        <td>{{ member[2] }}</td>
+        <td>{{ member[3] }}</td>
+        <td>{{ member[4] }}</td>
+        {% if current_user.is_authenticated and current_user.is_admin %}
+        <td>
+            <form action="{{ url_for('update_member', member_id=member[0]) }}" method="POST">
+                <input type="number" name="furnace_level" placeholder="Furnace Level">
+                <input type="number" name="power_level" placeholder="Power">
+                <input type="text" name="rank" placeholder="Rank">
+                <button type="submit">Update</button>
+            </form>
+            <form action="{{ url_for('delete_member', member_id=member[0]) }}" method="POST">
+                <button type="submit">Delete</button>
+            </form>
+        </td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+</tbody>
         </table>
     </main>
 
